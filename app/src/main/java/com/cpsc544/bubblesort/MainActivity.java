@@ -23,6 +23,8 @@ public class MainActivity extends AppCompatActivity {
     private LinearLayout llSortingResult;
     private List<int[]> numbersAfterSort;
     private ValidationService validationService;
+    private ValidationRule valueRule;
+    private ValidationRule lengthRule;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,7 +43,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void afterTextChanged(Editable editable) {
                 String input = editable.toString();
-                validate(input);
+                tvErrorMsg.setText(validateValue(input));
             }
         };
         etInput = findViewById(R.id.numsInput);
@@ -50,6 +52,8 @@ public class MainActivity extends AppCompatActivity {
         llSortingResult = findViewById(R.id.llSortingResult);
 
         validationService = new ValidationService();
+        valueRule = new ValidationRule(value -> value >= 0 && value <= 9, "Input must be numbers between 0 and 9, and separated by spaces.");
+        lengthRule = new ValidationRule(length -> length >= 3 && length <= 8, "The numbers of input must be between 3 and 8, and separated by spaces.");
     }
 
     public void sort(View vew) {
@@ -66,30 +70,49 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private boolean validate(String input) {
-        try {
-            int[] numbers = convertToIntArray(input);
-            List<String> errorMsgs = new ArrayList<>();
-            List<ValidationRule> rules = new ArrayList<>();
-            ValidationRule valueRule = new ValidationRule(
-                    value -> value >= 0 && value <= 9, "Input must be numbers between 0 and 9, and separated by spaces.");
-            ValidationRule lengthRule = new ValidationRule(
-                    length -> length >= 3 && length <= 8, "The numbers of input must be between 3 and 8, and separated by spaces.");
-            rules.add(valueRule);
-            rules.add(lengthRule);
+        List<String> errorMsgs = new ArrayList<>();
+        String errorMsg = "";
 
-            if (!validationService.validate(numbers, rules)) {
-                errorMsgs = validationService.getErrorMessages();
-            }
+        errorMsg = validateLength(input);
+        if (!errorMsg.equals("")) {
+            errorMsgs.add(errorMsg);
+        }
+        errorMsg = validateValue(input);
+        if (!errorMsg.equals("")) {
+            errorMsgs.add(errorMsg);
+        }
 
-            if (errorMsgs.size() > 0) {
-                tvErrorMsg.setText("");
-                tvErrorMsg.setText(String.join(" \n", errorMsgs));
-                return false;
-            }
-            return true;
-        } catch (Exception ex) {
+        if (errorMsgs.size() > 0) {
+            tvErrorMsg.setText(String.join(" \n", errorMsgs));
             return false;
         }
+        return true;
+    }
+
+    private String validateValue(String input) {
+        String errorMsg = "";
+        try {
+            int[] numbers = Arrays.stream(input.split("\\s+")).
+                    mapToInt(Integer::parseInt).toArray();
+            if (!validationService.validate(numbers, valueRule)) {
+                errorMsg = valueRule.getErrorMessage();
+            }
+        } catch (Exception ex) {
+            errorMsg = valueRule.getErrorMessage();
+        }
+        return errorMsg;
+    }
+
+    private String validateLength(String input) {
+        String errorMsg = "";
+        try {
+            if (!validationService.validate(convertToIntArray(input).length, lengthRule)) {
+                errorMsg = lengthRule.getErrorMessage();
+            }
+        } catch (Exception ex) {
+            errorMsg = lengthRule.getErrorMessage();
+        }
+        return errorMsg;
     }
 
     private int[] bubbleSort(int[] numbers) {
