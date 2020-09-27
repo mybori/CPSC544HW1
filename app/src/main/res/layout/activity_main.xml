@@ -26,11 +26,12 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
-            android:layout_marginLeft="8dp"
             android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
             android:layout_marginBottom="16dp"
-            android:text="Enter numbers between 0 to 9, and seperate by space: "
+            android:text="Enter at least three numbers with value between 0 to 9 and separate by space: "
             app:layout_constraintBottom_toTopOf="@+id/numsInput"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
