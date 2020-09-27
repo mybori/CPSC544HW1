@@ -7,14 +7,18 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private EditText etInput;
     private TextView tvErrorMsg;
-    private TextView tvSortResult;
+    private LinearLayout llSortingResult;
+    private List<int[]> numbersAfterSort;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,7 +43,7 @@ public class MainActivity extends AppCompatActivity {
         etInput = findViewById(R.id.numsInput);
         etInput.addTextChangedListener(inputTextWatcher);
         tvErrorMsg = findViewById(R.id.tvErrorMsg);
-        tvSortResult = findViewById(R.id.tvSortResult);
+        llSortingResult = findViewById(R.id.llSortingResult);
     }
 
     public void sort(View vew) {
@@ -49,8 +53,13 @@ public class MainActivity extends AppCompatActivity {
             tvErrorMsg.setText(errorMsg);
             return;
         };
-        int[] sortedNumbers = bubbleSort(convertToIntArray(input));
-        tvSortResult.setText(convertToString(sortedNumbers));
+        bubbleSort(convertToIntArray(input));
+        for (int[] numbers : numbersAfterSort) {
+            TextView tv = new TextView(this);
+            tv.setText(convertToString(numbers));
+            tv.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+            llSortingResult.addView(tv);
+        }
     }
 
     private String validate(String input) {
@@ -71,12 +80,14 @@ public class MainActivity extends AppCompatActivity {
 
     private int[] bubbleSort(int[] numbers) {
         int length = numbers.length;
-        for (int i = 0; i <= length; i++) {
+        numbersAfterSort = new ArrayList<>();
+        for (int i = 0; i < length; i++) {
             for (int j = length - 1; j > i; j--) {
                 if (numbers[j] < numbers[j - 1]) {
                     swap(numbers, j, j - 1);
                 }
             }
+            numbersAfterSort.add(numbers.clone());
         }
         return numbers;
     }
