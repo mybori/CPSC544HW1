@@ -10,6 +10,9 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.cpsc544.bubblesort.validation.ValidationRule;
+import com.cpsc544.bubblesort.validation.ValidationService;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -19,6 +22,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView tvErrorMsg;
     private LinearLayout llSortingResult;
     private List<int[]> numbersAfterSort;
+    private ValidationService validationService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,22 +41,21 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void afterTextChanged(Editable editable) {
                 String input = editable.toString();
-                tvErrorMsg.setText(validate(input));
+                validate(input);
             }
         };
         etInput = findViewById(R.id.numsInput);
         etInput.addTextChangedListener(inputTextWatcher);
         tvErrorMsg = findViewById(R.id.tvErrorMsg);
         llSortingResult = findViewById(R.id.llSortingResult);
+
+        validationService = new ValidationService();
     }
 
     public void sort(View vew) {
         final String input = etInput.getText().toString();
-        String errorMsg = validate(input);
-        if (!errorMsg.equals("")) {
-            tvErrorMsg.setText(errorMsg);
-            return;
-        };
+        if (!validate(input)) return;
+
         bubbleSort(convertToIntArray(input));
         for (int[] numbers : numbersAfterSort) {
             TextView tv = new TextView(this);
@@ -62,20 +65,31 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private String validate(String input) {
-        String errorMsg = "";
+    private boolean validate(String input) {
         try {
             int[] numbers = convertToIntArray(input);
-            for (int number : numbers) {
-                if (number < 0 || number > 9) {
-                    errorMsg = "Invalid input.";
-                    break;
-                }
+            List<String> errorMsgs = new ArrayList<>();
+            List<ValidationRule> rules = new ArrayList<>();
+            ValidationRule valueRule = new ValidationRule(
+                    value -> value >= 0 && value <= 9, "Input must be numbers between 0 and 9, and separated by spaces.");
+            ValidationRule lengthRule = new ValidationRule(
+                    length -> length >= 3 && length <= 8, "The numbers of input must be between 3 and 8, and separated by spaces.");
+            rules.add(valueRule);
+            rules.add(lengthRule);
+
+            if (!validationService.validate(numbers, rules)) {
+                errorMsgs = validationService.getErrorMessages();
             }
+
+            if (errorMsgs.size() > 0) {
+                tvErrorMsg.setText("");
+                tvErrorMsg.setText(String.join(" \n", errorMsgs));
+                return false;
+            }
+            return true;
         } catch (Exception ex) {
-            errorMsg = "Invalid input.";
+            return false;
         }
-        return errorMsg;
     }
 
     private int[] bubbleSort(int[] numbers) {
