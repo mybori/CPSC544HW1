@@ -69,6 +69,11 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public void exit(View view) {
+        this.finish();
+        System.exit(0);
+    }
+
     private boolean validate(String input) {
         List<String> errorMsgs = new ArrayList<>();
         String errorMsg = "";
