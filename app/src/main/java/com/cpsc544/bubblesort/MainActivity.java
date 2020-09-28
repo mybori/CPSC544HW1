@@ -1,7 +1,8 @@
 package com.cpsc544.bubblesort;
 
-import androidx.appcompat.app.AppCompatActivity;
-
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -9,19 +10,20 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import androidx.appcompat.app.AppCompatActivity;
 
+import com.cpsc544.bubblesort.algorithm.BubbleSort;
+import com.cpsc544.bubblesort.algorithm.SortAlgorithm;
+import com.cpsc544.bubblesort.animation.AnimationController;
 import com.cpsc544.bubblesort.validation.ValidationRule;
 import com.cpsc544.bubblesort.validation.ValidationService;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private EditText etInput;
     private TextView tvErrorMsg;
     private LinearLayout llSortingResult;
-    private List<int[]> numbersAfterSort;
+    private SortAlgorithm sortAlgorithm;
+    private AnimationController animationController;
     private ValidationService validationService;
     private ValidationRule valueRule;
     private ValidationRule lengthRule;
@@ -51,6 +53,8 @@ public class MainActivity extends AppCompatActivity {
         tvErrorMsg = findViewById(R.id.tvErrorMsg);
         llSortingResult = findViewById(R.id.llSortingResult);
 
+        sortAlgorithm = new BubbleSort();
+        animationController = new AnimationController(this);
         validationService = new ValidationService();
         valueRule = new ValidationRule(value -> value >= 0 && value <= 9, "Input must be numbers between 0 and 9, and separated by spaces.");
         lengthRule = new ValidationRule(length -> length >= 3 && length <= 8, "The numbers of input must be between 3 and 8, and separated by spaces.");
@@ -59,14 +63,11 @@ public class MainActivity extends AppCompatActivity {
     public void sort(View vew) {
         final String input = etInput.getText().toString();
         if (!validate(input)) return;
-
-        bubbleSort(convertToIntArray(input));
-        for (int[] numbers : numbersAfterSort) {
-            TextView tv = new TextView(this);
-            tv.setText(convertToString(numbers));
-            tv.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-            llSortingResult.addView(tv);
-        }
+        sortAlgorithm.sort(convertToIntArray(input));
+        animationController.runAnimation(convertToIntArray(input),
+                sortAlgorithm.getSortedAfterEachIteration(),
+                sortAlgorithm.getAnimationScenarios(),
+                llSortingResult);
     }
 
     public void exit(View view) {
@@ -120,32 +121,25 @@ public class MainActivity extends AppCompatActivity {
         return errorMsg;
     }
 
-    private int[] bubbleSort(int[] numbers) {
+    private int[] convertToIntArray(String input) {
+        return Arrays.stream(input.split("\\s+")).
+                mapToInt(Integer::parseInt).toArray();
+    }
+
+    private void sort(int[] numbers) {
         int length = numbers.length;
-        numbersAfterSort = new ArrayList<>();
         for (int i = 0; i < length; i++) {
             for (int j = length - 1; j > i; j--) {
                 if (numbers[j] < numbers[j - 1]) {
                     swap(numbers, j, j - 1);
                 }
             }
-            numbersAfterSort.add(numbers.clone());
         }
-        return numbers;
     }
 
     private void swap(int[] numbers, int i, int j) {
         int temp = numbers[i];
         numbers[i] = numbers[j];
         numbers[j] = temp;
-    }
-
-    private int[] convertToIntArray(String input) {
-        return Arrays.stream(input.split("\\s+")).
-                mapToInt(Integer::parseInt).toArray();
-    }
-
-    private String convertToString(int[] numbers) {
-        return Arrays.toString(numbers);
     }
 }
